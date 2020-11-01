@@ -4,11 +4,10 @@ package main
 /*
 #cgo pkg-config: x11
 #include <X11/Xlib.h>
-int typeOf(XEvent event){ return event.type; }
-XKeyEvent xkey(XEvent event) { return event.xkey; }
-XButtonEvent xbutton(XEvent event) { return event.xbutton; }
 */
 import "C"
+
+import "unsafe"
 
 func max(a, b int) int{
     if a < b { return b }
@@ -37,23 +36,33 @@ func main(){
 
     for{
         C.XNextEvent(dpy, &event)
+        event_ptr := unsafe.Pointer(&event)
 
-        switch C.typeOf(event) {
+        switch *(*C.int)(event_ptr) {
 
         case C.KeyPress:
-            if C.xkey(event).subwindow == C.None { break }
-            C.XRaiseWindow(dpy, C.xkey(event).subwindow)
+
+            xkey := *(*C.XKeyEvent)(event_ptr)
+
+            if xkey.subwindow == C.None { break }
+            C.XRaiseWindow(dpy, xkey.subwindow)
 
         case C.ButtonPress:
-            if C.xbutton(event).subwindow == C.None { break }
-            C.XGetWindowAttributes(dpy, C.xbutton(event).subwindow, &attr)
-            start = C.xbutton(event)
+
+            xbutton := *(*C.XButtonEvent)(event_ptr)
+
+            if xbutton.subwindow == C.None { break }
+            C.XGetWindowAttributes(dpy, xbutton.subwindow, &attr)
+            start = xbutton
 
         case C.MotionNotify:
+
+            xbutton := *(*C.XButtonEvent)(event_ptr)
+
             if start.subwindow == C.None { break }
             
-            xdiff := C.xbutton(event).x_root - start.x_root
-            ydiff := C.xbutton(event).y_root - start.y_root
+            xdiff := xbutton.x_root - start.x_root
+            ydiff := xbutton.y_root - start.y_root
 
             switch start.button {
             case 1:
