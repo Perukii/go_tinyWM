@@ -1,7 +1,7 @@
 
 # tinyWM on Go
 
-tynyWMのGo向け移植です。
+tinyWMのGo向け移植です。
 
 ### Build
 
